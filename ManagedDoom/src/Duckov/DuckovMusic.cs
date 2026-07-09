@@ -17,11 +17,14 @@ namespace ManagedDoom.Duckov
         private Config config;
         private Wad wad;
 
-        private MusStream stream;
+        public MusStream stream;
         private Bgm current;
 
+        public bool IsDisposed {get; private set;}
+        
         public DuckovMusic(Config config, GameContent content, string sfPath)
         {
+            IsDisposed = false;
             try
             {
                 Debug.Log("Initialize music: ");
@@ -89,7 +92,7 @@ namespace ManagedDoom.Duckov
 
             throw new Exception("Unknown format!");
         }
-
+        
         public void Dispose()
         {
             Debug.Log("Shutdown music.");
@@ -99,6 +102,8 @@ namespace ManagedDoom.Duckov
                 stream.Dispose();
                 stream = null;
             }
+            
+            IsDisposed = true;
         }
 
         public int MaxVolume
@@ -124,7 +129,7 @@ namespace ManagedDoom.Duckov
 
 
 
-        private class MusStream : IDisposable
+        public class MusStream : IDisposable
         {
             private static readonly int latency = 200;
             private static readonly int blockLength = 2048;
@@ -168,72 +173,8 @@ namespace ManagedDoom.Duckov
                     Debug.LogError("Failed to create music event");
                     return;
                 }
-
-                eventInstance.setCallback(HandleEvent);
-                eventInstance.start();
-                this.eventInstance = eventInstance;
-            }
-
-            private float[] bufferleft = new float[blockLength * 2];
-            private int bufferCopyFrom = -1;
-
-            public static RESULT HandleCallback(IntPtr soundPtr, IntPtr data, uint datalen)
-            {
-                FMOD.Sound sound = new FMOD.Sound(soundPtr);
                 
-                sound.getUserData(out IntPtr userDataPtr);
-                
-                GCHandle handle = GCHandle.FromIntPtr(userDataPtr);
-                
-                var player = (MusStream) handle.Target;
-                Debug.Log("Start write data");
-                Debug.Log("data ptr = " + data);
-                Debug.Log("datalen = " + datalen);
-                if (datalen == 0) return RESULT.OK;
-                player.OnGetData(data);
-
-                return RESULT.OK;
-            }
-            
-            public RESULT HandleEvent(EVENT_CALLBACK_TYPE type, IntPtr _event, IntPtr parameters)
-            {
-                switch (type)
-                {
-                    case EVENT_CALLBACK_TYPE.CREATE_PROGRAMMER_SOUND:
-                    {
-                        MODE mode = MODE.LOOP_NORMAL | MODE.CREATECOMPRESSEDSAMPLE | MODE.NONBLOCKING;
-                        PROGRAMMER_SOUND_PROPERTIES structure = (PROGRAMMER_SOUND_PROPERTIES)Marshal.PtrToStructure(parameters, typeof(PROGRAMMER_SOUND_PROPERTIES));
-
-                        var _handle = GCHandle.Alloc(this, GCHandleType.Normal);
-                        IntPtr contextPtr = GCHandle.ToIntPtr(_handle);
-                        
-                        CREATESOUNDEXINFO exinfo = new()
-                        {
-                            cbsize = Marshal.SizeOf(typeof(CREATESOUNDEXINFO)),
-                            format = SOUND_FORMAT.PCMFLOAT,
-                            defaultfrequency = MusDecoder.SampleRate,
-                            decodebuffersize = (uint) blockLength,
-                            length = (uint) blockLength * 2 * sizeof(float),
-                            numchannels = 2,
-                            pcmreadcallback = HandleCallback,
-                            pcmsetposcallback = (IntPtr sound, int subsound, uint position, TIMEUNIT postype) => RESULT.OK,
-                            userdata = contextPtr
-                        };
-                        RuntimeManager.CoreSystem.createStream("Sound_DOOM_Music", MODE.OPENUSER | MODE.LOOP_NORMAL,
-                            ref exinfo, out var sound);
-                        
-                        structure.sound = sound.handle;
-                        structure.subsoundIndex = -1;
-                        Marshal.StructureToPtr(structure, parameters, fDeleteOld: false);
-                        break;
-                    }
-                    case EVENT_CALLBACK_TYPE.DESTROY_PROGRAMMER_SOUND:
-                        new Sound(((PROGRAMMER_SOUND_PROPERTIES)Marshal.PtrToStructure(parameters, typeof(PROGRAMMER_SOUND_PROPERTIES))).sound).release();
-                        break;
-                    case EVENT_CALLBACK_TYPE.DESTROYED:
-                        break;
-                }
-                return RESULT.OK;
+                // todo: 
             }
 
             public void SetDecoder(IDecoder decoder)
@@ -254,7 +195,12 @@ namespace ManagedDoom.Duckov
                 } */
             }
 
-            private void OnGetData(IntPtr intptr)
+            public static int SampleSize(int channel)
+            {
+                return blockLength * channel;
+            }
+
+            public void OnGetData(float[] samples, int channel, int pos = 0)
             {
                 if (reserved != current)
                 {
@@ -266,19 +212,29 @@ namespace ManagedDoom.Duckov
 
                 current.RenderWaveform(synthesizer, left, right);
 
-                var pos = 0;
-
-                unsafe
+                for (var t = 0; t < blockLength; t++)
                 {
-                    float* samples = (float*) intptr;
-                    for (var t = 0; t < blockLength; t++)
+                    var sampleLeft = Math.Clamp(a * left[t], -1f, 1f);
+                    var sampleRight = Math.Clamp(a * right[t], -1f, 1f);
+                    if (channel == 1)
                     {
-                        var sampleLeft = Math.Clamp(a * left[t], -1f, 1f);
-                        var sampleRight = Math.Clamp(a * right[t], -1f, 1f);
-                        samples[pos++] = sampleLeft;
-                        Debug.Log($"Pos: {pos - 1}, Sample: {sampleLeft}");
-                        samples[pos++] = sampleRight;
-                        Debug.Log($"Pos: {pos - 1}, Sample: {sampleRight}");
+                        samples[pos++] = (sampleLeft + sampleRight) / 2;
+                    } else if (channel % 2 == 0)
+                    {
+                        for (int i = 0; i < channel / 2; i++)
+                        {
+                            samples[pos++] = sampleLeft;
+                            samples[pos++] = sampleRight;
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < (channel - 1) / 2 ; i++)
+                        {
+                            samples[pos++] = sampleLeft;
+                            samples[pos++] = sampleRight;
+                        }
+                        samples[pos++] = (sampleLeft + sampleRight) / 2;
                     }
                 }
                 Debug.Log("Writted" + pos);
@@ -294,7 +250,7 @@ namespace ManagedDoom.Duckov
 
 
 
-        private interface IDecoder
+        public interface IDecoder
         {
             void RenderWaveform(Synthesizer synthesizer, Span<float> left, Span<float> right);
         }
