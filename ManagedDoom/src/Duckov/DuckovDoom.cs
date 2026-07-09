@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Duckov.MiniGames;
 using UnityEngine;
@@ -14,6 +16,7 @@ namespace ManagedDoom.Duckov
 
         public DuckovVideo video { get; private set; }
         private DuckovUserInput userInput;
+        public DuckovMusic music;
 
         private Doom doom;
         private int fpsScale;
@@ -21,9 +24,12 @@ namespace ManagedDoom.Duckov
 
         private Exception exception;
         private MiniGame mini;
+        
+        public bool Disposed { get; private set; }
 
         public DuckovDoom(CommandLineArgs args, Config config, MiniGame mini)
         {
+            Disposed = false;
             try
             {
                 this.args = args;
@@ -46,31 +52,32 @@ namespace ManagedDoom.Duckov
         {
             if (exception != null)
             {
-                ExceptionDispatchInfo.Throw(exception);
+                Debug.LogError(exception);
             }
+            Close();
         }
         
         private void OnLoad()
         {
             video = new DuckovVideo(config, content);
 
-            /* if (!args.nosound.Present && !(args.nosfx.Present && args.nomusic.Present))
+            if (!args.nosound.Present && !(args.nosfx.Present && args.nomusic.Present))
             {
-                audioDevice = new AudioDevice();
-                if (!args.nosfx.Present)
+                /* if (!args.nosfx.Present)
                 {
                     sound = new SilkSound(config, content, audioDevice);
-                }
+                } */
                 if (!args.nomusic.Present)
                 {
-                    music = SilkConfigUtilities.GetMusicInstance(config, content, audioDevice);
+                    music = new DuckovMusic(config, content, Path.Combine(
+                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), config.audio_soundfont));
                 }
-            } */
+            }
 
             userInput = new DuckovUserInput(config, this, !args.nomouse.Present, mini);
 
             // doom = new Doom(args, config, content, video, sound, music, userInput);
-            doom = new Doom(args, config, content, video, null, null, userInput);
+            doom = new Doom(args, config, content, video, null, music, userInput);
 
             fpsScale = args.timedemo.Present ? 1 : config.video_fpsscale;
             frameCount = -1;
@@ -103,13 +110,12 @@ namespace ManagedDoom.Duckov
 
         private void Close()
         {
-            // todo: knock player out of FC
+            mini.Console.StopInteract();
             Dispose();
         }
         
         private void OnRender()
         {
-            Debug.Log("Try render");
             try
             {
                 var frameFrac = Fixed.FromInt(frameCount % fpsScale + 1) / fpsScale;
@@ -136,10 +142,11 @@ namespace ManagedDoom.Duckov
         public void Dispose()
         {
             userInput?.Dispose();
-            // music?.Dispose();
+            music?.Dispose();
             // sound?.Dispose();
             video?.Dispose();
             doom.EndGame();
+            Disposed = true;
         }
         
         public string QuitMessage => doom.QuitMessage;
