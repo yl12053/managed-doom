@@ -16,10 +16,12 @@
 
 
 using System;
-using System.Numerics;
 using System.Runtime.ExceptionServices;
 using DrippyAL;
 using ManagedDoom.Audio;
+using UnityEngine;
+using AudioClip = DrippyAL.AudioClip;
+using Vector3 = System.Numerics.Vector3;
 
 namespace ManagedDoom.Silk
 {
@@ -57,7 +59,7 @@ namespace ManagedDoom.Silk
         {
             try
             {
-                Console.Write("Initialize sound: ");
+                Debug.Log("Initialize sound: ");
 
                 this.config = config;
 
@@ -105,11 +107,11 @@ namespace ManagedDoom.Silk
 
                 lastUpdate = DateTime.MinValue;
 
-                Console.WriteLine("OK");
+                Debug.Log("OK");
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed");
+                Debug.Log("Failed");
                 Dispose();
                 ExceptionDispatchInfo.Throw(e);
             }
@@ -497,7 +499,7 @@ namespace ManagedDoom.Silk
 
         public void Dispose()
         {
-            Console.WriteLine("Shutdown sound.");
+            Debug.Log("Shutdown sound.");
 
             if (channels != null)
             {

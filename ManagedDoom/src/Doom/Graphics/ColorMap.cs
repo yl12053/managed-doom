@@ -17,6 +17,7 @@
 
 using System;
 using System.Runtime.ExceptionServices;
+using UnityEngine;
 
 namespace ManagedDoom
 {
@@ -30,7 +31,7 @@ namespace ManagedDoom
         {
             try
             {
-                Console.Write("Load color map: ");
+                Debug.Log("Load color map: ");
 
                 var raw = wad.ReadLump("COLORMAP");
                 var num = raw.Length / 256;
@@ -45,11 +46,11 @@ namespace ManagedDoom
                     }
                 }
 
-                Console.WriteLine("OK");
+                Debug.Log("OK");
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed");
+                Debug.Log("Failed");
                 ExceptionDispatchInfo.Throw(e);
             }
         }

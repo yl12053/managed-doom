@@ -21,6 +21,7 @@ using System.Runtime.ExceptionServices;
 using DrippyAL;
 using MeltySynth;
 using ManagedDoom.Audio;
+using UnityEngine;
 
 namespace ManagedDoom.Silk
 {
@@ -36,7 +37,7 @@ namespace ManagedDoom.Silk
         {
             try
             {
-                Console.Write("Initialize music: ");
+                Debug.Log("Initialize music: ");
 
                 this.config = config;
                 this.wad = content.Wad;
@@ -44,11 +45,11 @@ namespace ManagedDoom.Silk
                 stream = new MusStream(this, config, device, sfPath);
                 current = Bgm.NONE;
 
-                Console.WriteLine("OK");
+                Debug.Log("OK");
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed");
+                Debug.Log("Failed");
                 Dispose();
                 ExceptionDispatchInfo.Throw(e);
             }
@@ -104,7 +105,7 @@ namespace ManagedDoom.Silk
 
         public void Dispose()
         {
-            Console.WriteLine("Shutdown music.");
+            Debug.Log("Shutdown music.");
 
             if (stream != null)
             {

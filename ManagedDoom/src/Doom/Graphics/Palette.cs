@@ -17,6 +17,7 @@
 
 using System;
 using System.Runtime.ExceptionServices;
+using UnityEngine;
 
 namespace ManagedDoom
 {
@@ -38,7 +39,7 @@ namespace ManagedDoom
         {
             try
             {
-                Console.Write("Load palette: ");
+                Debug.Log("Load palette: ");
 
                 data = wad.ReadLump("PLAYPAL");
 
@@ -49,11 +50,11 @@ namespace ManagedDoom
                     palettes[i] = new uint[256];
                 }
 
-                Console.WriteLine("OK");
+                Debug.Log("OK");
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed");
+                Debug.Log("Failed");
                 ExceptionDispatchInfo.Throw(e);
             }
         }

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
+using UnityEngine;
 
 namespace ManagedDoom
 {
@@ -36,7 +37,7 @@ namespace ManagedDoom
         {
             try
             {
-                Console.Write("Open WAD files: ");
+                Debug.Log("Open WAD files: ");
 
                 names = new List<string>();
                 streams = new List<Stream>();
@@ -51,11 +52,11 @@ namespace ManagedDoom
                 missionPack = GetMissionPack(names);
                 gameVersion = GetGameVersion(names);
 
-                Console.WriteLine("OK (" + string.Join(", ", fileNames.Select(x => Path.GetFileName(x))) + ")");
+                Debug.Log("OK (" + string.Join(", ", fileNames.Select(x => Path.GetFileName(x))) + ")");
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed");
+                Debug.Log("Failed");
                 Dispose();
                 ExceptionDispatchInfo.Throw(e);
             }
@@ -156,7 +157,7 @@ namespace ManagedDoom
 
         public void Dispose()
         {
-            Console.WriteLine("Close WAD files.");
+            Debug.Log("Close WAD files.");
 
             foreach (var stream in streams)
             {

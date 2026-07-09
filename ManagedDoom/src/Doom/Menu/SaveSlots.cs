@@ -40,7 +40,15 @@ namespace ManagedDoom
                 {
                     using (var reader = new FileStream(path, FileMode.Open, FileAccess.Read))
                     {
-                        reader.ReadExactly(buffer);
+                        int totalread = 0;
+                        while (totalread < descriptionSize)
+                        {
+                            int read = reader.Read(buffer, totalread, descriptionSize - totalread);
+                            if (read == 0)
+                            {
+                                throw new EndOfStreamException("Exc");
+                            }
+                        }
                         slots[i] = DoomInterop.ToString(buffer, 0, buffer.Length);
                     }
                 }

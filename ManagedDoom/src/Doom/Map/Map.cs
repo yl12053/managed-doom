@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
+using UnityEngine;
 
 namespace ManagedDoom
 {
@@ -70,7 +71,7 @@ namespace ManagedDoom
                     name = "E" + options.Episode + "M" + options.Map;
                 }
 
-                Console.Write("Load map '" + name + "': ");
+                Debug.Log("Load map '" + name + "': ");
 
                 var map = wad.GetLumpNumber(name);
 
@@ -114,11 +115,11 @@ namespace ManagedDoom
                     title = DoomInfo.MapTitles.Doom[options.Episode - 1][options.Map - 1];
                 }
 
-                Console.WriteLine("OK");
+                Debug.Log("OK");
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed");
+                Debug.Log("Failed");
                 ExceptionDispatchInfo.Throw(e);
             }
         }

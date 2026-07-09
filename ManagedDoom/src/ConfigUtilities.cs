@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace ManagedDoom
 {
@@ -38,7 +39,7 @@ namespace ManagedDoom
 
         public static string GetExeDirectory()
         {
-            return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }
 
         public static string GetConfigPath()

@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using UnityEngine;
 
 namespace ManagedDoom
 {
@@ -48,7 +49,7 @@ namespace ManagedDoom
                 // Ensure the static members are initialized.
                 DoomInfo.Strings.PRESSKEY.GetHashCode();
 
-                Console.Write("Load DeHackEd patches: ");
+                Debug.Log("Load DeHackEd patches: ");
 
                 foreach (var fileName in fileNames)
                 {
@@ -56,11 +57,11 @@ namespace ManagedDoom
                     ProcessLines(File.ReadLines(fileName));
                 }
 
-                Console.WriteLine("OK (" + string.Join(", ", fileNames.Select(x => Path.GetFileName(x))) + ")");
+                Debug.Log("OK (" + string.Join(", ", fileNames.Select(x => Path.GetFileName(x))) + ")");
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed");
+                Debug.Log("Failed");
                 throw new Exception("Failed to apply DeHackEd patch: " + lastFileName, e);
             }
         }
@@ -76,15 +77,15 @@ namespace ManagedDoom
 
                 try
                 {
-                    Console.Write("Load DeHackEd patch from WAD: ");
+                    Debug.Log("Load DeHackEd patch from WAD: ");
 
                     ProcessLines(ReadLines(wad.ReadLump(lump)));
 
-                    Console.WriteLine("OK");
+                    Debug.Log("OK");
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Failed");
+                    Debug.Log("Failed");
                     throw new Exception("Failed to apply DeHackEd patch!", e);
                 }
             }

@@ -16,23 +16,17 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.IO;
+using ModSetting.Api;
+using UnityEngine;
 
 namespace ManagedDoom
 {
     public sealed class Config
     {
-        public KeyBinding key_forward;
-        public KeyBinding key_backward;
-        public KeyBinding key_strafeleft;
-        public KeyBinding key_straferight;
-        public KeyBinding key_turnleft;
-        public KeyBinding key_turnright;
-        public KeyBinding key_fire;
-        public KeyBinding key_use;
-        public KeyBinding key_run;
-        public KeyBinding key_strafe;
+        public KeyCode key_turnleft;
+        public KeyCode key_turnright;
+        public KeyCode key_run;
+        public KeyCode key_strafe;
 
         public int mouse_sensitivity;
         public bool mouse_disableyaxis;
@@ -59,69 +53,8 @@ namespace ManagedDoom
         // Default settings.
         public Config()
         {
-            key_forward = new KeyBinding(
-                new DoomKey[]
-                {
-                    DoomKey.Up,
-                    DoomKey.W
-                });
-            key_backward = new KeyBinding(
-                new DoomKey[]
-                {
-                    DoomKey.Down,
-                    DoomKey.S
-                });
-            key_strafeleft = new KeyBinding(
-                new DoomKey[]
-                {
-                    DoomKey.A
-                });
-            key_straferight = new KeyBinding(
-                new DoomKey[]
-                {
-                    DoomKey.D
-                });
-            key_turnleft = new KeyBinding(
-                new DoomKey[]
-                {
-                    DoomKey.Left
-                });
-            key_turnright = new KeyBinding(
-                new DoomKey[]
-                {
-                    DoomKey.Right
-                });
-            key_fire = new KeyBinding(
-                new DoomKey[]
-                {
-                    DoomKey.LControl,
-                    DoomKey.RControl
-                },
-                new DoomMouseButton[]
-                {
-                    DoomMouseButton.Mouse1
-                });
-            key_use = new KeyBinding(
-                new DoomKey[]
-                {
-                    DoomKey.Space
-                },
-                new DoomMouseButton[]
-                {
-                    DoomMouseButton.Mouse2
-                });
-            key_run = new KeyBinding(
-                new DoomKey[]
-                {
-                    DoomKey.LShift,
-                    DoomKey.RShift
-                });
-            key_strafe = new KeyBinding(
-                new DoomKey[]
-                {
-                    DoomKey.LAlt,
-                    DoomKey.RAlt
-                });
+            key_run = KeyCode.LeftShift;
+            key_strafe = KeyCode.LeftAlt;
 
             mouse_sensitivity = 8;
             mouse_disableyaxis = false;
@@ -146,164 +79,51 @@ namespace ManagedDoom
             isRestoredFromFile = false;
         }
 
-        public Config(string path) : this()
+        public Config(SettingsBuilder settingsBuilder) : this()
         {
             try
             {
-                Console.Write("Restore settings: ");
+                Debug.Log("Restore settings: ");
 
-                var dic = new Dictionary<string, string>();
-                foreach (var line in File.ReadLines(path))
+                if (settingsBuilder.HasConfig())
                 {
-                    var split = line.Split('=', StringSplitOptions.RemoveEmptyEntries);
-                    if (split.Length == 2)
-                    {
-                        dic[split[0].Trim()] = split[1].Trim();
-                    }
+                    key_turnleft = settingsBuilder.GetSavedValue("key_turnleft", out KeyCode k1) ? k1 : key_turnleft;
+                    key_turnright = settingsBuilder.GetSavedValue("key_turnright", out KeyCode k2) ? k2 : key_turnright;
+                    key_run = settingsBuilder.GetSavedValue("key_run", out KeyCode k3) ? k3 : key_run;
+                    key_strafe = settingsBuilder.GetSavedValue("key_strafe", out KeyCode k4) ? k4 : key_strafe;
+                    mouse_sensitivity = settingsBuilder.GetSavedValue("mouse_sensitivity", out int i1)
+                        ? i1
+                        : mouse_sensitivity;
+                    mouse_disableyaxis = settingsBuilder.GetSavedValue("mouse_disableyaxis", out bool b1)
+                        ? b1
+                        : mouse_disableyaxis;
+                    
+                    if (settingsBuilder.GetSavedValue(nameof(game_alwaysrun), out bool tempAlwaysRun)) game_alwaysrun = tempAlwaysRun;
+                    
+                    if (settingsBuilder.GetSavedValue(nameof(video_screenwidth), out int tempWidth)) video_screenwidth = tempWidth;
+                    if (settingsBuilder.GetSavedValue(nameof(video_screenheight), out int tempHeight)) video_screenheight = tempHeight;
+                    if (settingsBuilder.GetSavedValue(nameof(video_fullscreen), out bool tempFullscreen)) video_fullscreen = tempFullscreen;
+                    if (settingsBuilder.GetSavedValue(nameof(video_highresolution), out bool tempHighRes)) video_highresolution = tempHighRes;
+                    if (settingsBuilder.GetSavedValue(nameof(video_displaymessage), out bool tempMsg)) video_displaymessage = tempMsg;
+                    if (settingsBuilder.GetSavedValue(nameof(video_gamescreensize), out int tempScreenSize)) video_gamescreensize = tempScreenSize;
+                    if (settingsBuilder.GetSavedValue(nameof(video_gammacorrection), out int tempGamma)) video_gammacorrection = tempGamma;
+                    if (settingsBuilder.GetSavedValue(nameof(video_fpsscale), out int tempFpsScale)) video_fpsscale = tempFpsScale;
+                    
+                    if (settingsBuilder.GetSavedValue(nameof(audio_soundvolume), out int tempSndVol)) audio_soundvolume = tempSndVol;
+                    if (settingsBuilder.GetSavedValue(nameof(audio_musicvolume), out int tempMusVol)) audio_musicvolume = tempMusVol;
+                    if (settingsBuilder.GetSavedValue(nameof(audio_randompitch), out bool tempPitch)) audio_randompitch = tempPitch;
+                    if (settingsBuilder.GetSavedValue(nameof(audio_soundfont), out string tempSndFont)) audio_soundfont = tempSndFont;
+                    if (settingsBuilder.GetSavedValue(nameof(audio_musiceffect), out bool tempMusEff)) audio_musiceffect = tempMusEff;
+                    
+                    isRestoredFromFile = true;
                 }
 
-                key_forward = GetKeyBinding(dic, nameof(key_forward), key_forward);
-                key_backward = GetKeyBinding(dic, nameof(key_backward), key_backward);
-                key_strafeleft = GetKeyBinding(dic, nameof(key_strafeleft), key_strafeleft);
-                key_straferight = GetKeyBinding(dic, nameof(key_straferight), key_straferight);
-                key_turnleft = GetKeyBinding(dic, nameof(key_turnleft), key_turnleft);
-                key_turnright = GetKeyBinding(dic, nameof(key_turnright), key_turnright);
-                key_fire = GetKeyBinding(dic, nameof(key_fire), key_fire);
-                key_use = GetKeyBinding(dic, nameof(key_use), key_use);
-                key_run = GetKeyBinding(dic, nameof(key_run), key_run);
-                key_strafe = GetKeyBinding(dic, nameof(key_strafe), key_strafe);
-
-                mouse_sensitivity = GetInt(dic, nameof(mouse_sensitivity), mouse_sensitivity);
-                mouse_disableyaxis = GetBool(dic, nameof(mouse_disableyaxis), mouse_disableyaxis);
-
-                game_alwaysrun = GetBool(dic, nameof(game_alwaysrun), game_alwaysrun);
-
-                video_screenwidth = GetInt(dic, nameof(video_screenwidth), video_screenwidth);
-                video_screenheight = GetInt(dic, nameof(video_screenheight), video_screenheight);
-                video_fullscreen = GetBool(dic, nameof(video_fullscreen), video_fullscreen);
-                video_highresolution = GetBool(dic, nameof(video_highresolution), video_highresolution);
-                video_displaymessage = GetBool(dic, nameof(video_displaymessage), video_displaymessage);
-                video_gamescreensize = GetInt(dic, nameof(video_gamescreensize), video_gamescreensize);
-                video_gammacorrection = GetInt(dic, nameof(video_gammacorrection), video_gammacorrection);
-                video_fpsscale = GetInt(dic, nameof(video_fpsscale), video_fpsscale);
-
-                audio_soundvolume = GetInt(dic, nameof(audio_soundvolume), audio_soundvolume);
-                audio_musicvolume = GetInt(dic, nameof(audio_musicvolume), audio_musicvolume);
-                audio_randompitch = GetBool(dic, nameof(audio_randompitch), audio_randompitch);
-                audio_soundfont = GetString(dic, nameof(audio_soundfont), audio_soundfont);
-                audio_musiceffect = GetBool(dic, nameof(audio_musiceffect), audio_musiceffect);
-
-                isRestoredFromFile = true;
-
-                Console.WriteLine("OK");
+                Debug.Log("OK");
             }
-            catch
+            catch (Exception e)
             {
-                Console.WriteLine("Failed");
+                Debug.LogError(e);
             }
-        }
-
-        public void Save(string path)
-        {
-            try
-            {
-                using (var writer = new StreamWriter(path))
-                {
-                    writer.WriteLine(nameof(key_forward) + " = " + key_forward);
-                    writer.WriteLine(nameof(key_backward) + " = " + key_backward);
-                    writer.WriteLine(nameof(key_strafeleft) + " = " + key_strafeleft);
-                    writer.WriteLine(nameof(key_straferight) + " = " + key_straferight);
-                    writer.WriteLine(nameof(key_turnleft) + " = " + key_turnleft);
-                    writer.WriteLine(nameof(key_turnright) + " = " + key_turnright);
-                    writer.WriteLine(nameof(key_fire) + " = " + key_fire);
-                    writer.WriteLine(nameof(key_use) + " = " + key_use);
-                    writer.WriteLine(nameof(key_run) + " = " + key_run);
-                    writer.WriteLine(nameof(key_strafe) + " = " + key_strafe);
-
-                    writer.WriteLine(nameof(mouse_sensitivity) + " = " + mouse_sensitivity);
-                    writer.WriteLine(nameof(mouse_disableyaxis) + " = " + BoolToString(mouse_disableyaxis));
-
-                    writer.WriteLine(nameof(game_alwaysrun) + " = " + BoolToString(game_alwaysrun));
-
-                    writer.WriteLine(nameof(video_screenwidth) + " = " + video_screenwidth);
-                    writer.WriteLine(nameof(video_screenheight) + " = " + video_screenheight);
-                    writer.WriteLine(nameof(video_fullscreen) + " = " + BoolToString(video_fullscreen));
-                    writer.WriteLine(nameof(video_highresolution) + " = " + BoolToString(video_highresolution));
-                    writer.WriteLine(nameof(video_displaymessage) + " = " + BoolToString(video_displaymessage));
-                    writer.WriteLine(nameof(video_gamescreensize) + " = " + video_gamescreensize);
-                    writer.WriteLine(nameof(video_gammacorrection) + " = " + video_gammacorrection);
-                    writer.WriteLine(nameof(video_fpsscale) + " = " + video_fpsscale);
-
-                    writer.WriteLine(nameof(audio_soundvolume) + " = " + audio_soundvolume);
-                    writer.WriteLine(nameof(audio_musicvolume) + " = " + audio_musicvolume);
-                    writer.WriteLine(nameof(audio_randompitch) + " = " + BoolToString(audio_randompitch));
-                    writer.WriteLine(nameof(audio_soundfont) + " = " + audio_soundfont);
-                    writer.WriteLine(nameof(audio_musiceffect) + " = " + BoolToString(audio_musiceffect));
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        private static int GetInt(Dictionary<string, string> dic, string name, int defaultValue)
-        {
-            string stringValue;
-            if (dic.TryGetValue(name, out stringValue))
-            {
-                int value;
-                if (int.TryParse(stringValue, out value))
-                {
-                    return value;
-                }
-            }
-
-            return defaultValue;
-        }
-
-        private static string GetString(Dictionary<string, string> dic, string name, string defaultValue)
-        {
-            string stringValue;
-            if (dic.TryGetValue(name, out stringValue))
-            {
-                return stringValue;
-            }
-
-            return defaultValue;
-        }
-
-        private static bool GetBool(Dictionary<string, string> dic, string name, bool defaultValue)
-        {
-            string stringValue;
-            if (dic.TryGetValue(name, out stringValue))
-            {
-                if (stringValue == "true")
-                {
-                    return true;
-                }
-                else if (stringValue == "false")
-                {
-                    return false;
-                }
-            }
-
-            return defaultValue;
-        }
-
-        private static KeyBinding GetKeyBinding(Dictionary<string, string> dic, string name, KeyBinding defaultValue)
-        {
-            string stringValue;
-            if (dic.TryGetValue(name, out stringValue))
-            {
-                return KeyBinding.Parse(stringValue);
-            }
-
-            return defaultValue;
-        }
-
-        private static string BoolToString(bool value)
-        {
-            return value ? "true" : "false";
         }
 
         public bool IsRestoredFromFile => isRestoredFromFile;

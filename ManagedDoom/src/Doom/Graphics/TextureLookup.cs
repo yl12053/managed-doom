@@ -19,6 +19,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
+using UnityEngine;
 
 namespace ManagedDoom
 {
@@ -38,16 +39,16 @@ namespace ManagedDoom
         {
             try
             {
-                Console.Write("Load textures: ");
+                Debug.Log("Load textures: ");
 
                 InitLookup(wad);
                 InitSwitchList();
 
-                Console.WriteLine("OK (" + textures.Count + " textures)");
+                Debug.Log("OK (" + textures.Count + " textures)");
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed");
+                Debug.Log("Failed");
                 ExceptionDispatchInfo.Throw(e);
             }
         }
