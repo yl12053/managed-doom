@@ -186,51 +186,11 @@ namespace ManagedDoom.Duckov
                 GCHandle handle = GCHandle.FromIntPtr(userDataPtr);
                 
                 var player = (MusStream) handle.Target;
-                unsafe
-                {
-                    Debug.Log("Start write data");
-                    Debug.Log("data ptr = " + data);
-                    Debug.Log("datalen = " + datalen);
-                    if (datalen == 0) return RESULT.OK;
-                    float* buffer = (float*)data;
-                    long ssize = datalen / 4;
-                    long ptr = 0;
-                    if (player.bufferCopyFrom != -1)
-                    {
-                        Debug.Log("Has hist data");
-                        for (;
-                             player.bufferCopyFrom < blockLength * 2 && ssize > 0;
-                             player.bufferCopyFrom += 1, ssize -= 1, ptr += 1)
-                        {
-                            Debug.Log("Writing to ptr+" + ptr);
-                            buffer[ptr] = player.bufferleft[player.bufferCopyFrom];
-                        }
-
-                        if (player.bufferCopyFrom >= blockLength * 2) player.bufferCopyFrom = -1;
-                    }
-
-                    while (ssize >= blockLength * 2)
-                    {
-                        Debug.Log("Writing to ptr[]+" + ptr);
-                        player.OnGetData(new Span<float>(buffer + ptr, blockLength * 2));
-                        ptr += blockLength * 2;
-                        ssize -= blockLength * 2;
-                    }
-
-                    if (ssize >= 0)
-                    {
-                        Debug.Log("Writing to buffer");
-                        player.OnGetData(player.bufferleft.AsSpan());
-                        player.bufferCopyFrom = 0;
-                        for (;
-                             player.bufferCopyFrom < blockLength * 2 && ssize > 0;
-                             player.bufferCopyFrom += 1, ssize -= 1, ptr += 1)
-                        {
-                            Debug.Log("Writing to ptr+" + ptr);
-                            buffer[ptr] = player.bufferleft[player.bufferCopyFrom];
-                        }
-                    }
-                }
+                Debug.Log("Start write data");
+                Debug.Log("data ptr = " + data);
+                Debug.Log("datalen = " + datalen);
+                if (datalen == 0) return RESULT.OK;
+                player.OnGetData(data);
 
                 return RESULT.OK;
             }
@@ -294,7 +254,7 @@ namespace ManagedDoom.Duckov
                 } */
             }
 
-            private void OnGetData(Span<float> samples)
+            private void OnGetData(IntPtr intptr)
             {
                 if (reserved != current)
                 {
@@ -308,12 +268,18 @@ namespace ManagedDoom.Duckov
 
                 var pos = 0;
 
-                for (var t = 0; t < blockLength; t++)
+                unsafe
                 {
-                    var sampleLeft = Math.Clamp(a * left[t], -1f, 1f);
-                    var sampleRight = Math.Clamp(a * right[t], -1f, 1f);
-                    samples[pos++] = sampleLeft;
-                    samples[pos++] = sampleRight;
+                    float* samples = (float*) intptr;
+                    for (var t = 0; t < blockLength; t++)
+                    {
+                        var sampleLeft = Math.Clamp(a * left[t], -1f, 1f);
+                        var sampleRight = Math.Clamp(a * right[t], -1f, 1f);
+                        samples[pos++] = sampleLeft;
+                        Debug.Log($"Pos: {pos - 1}, Sample: {sampleLeft}");
+                        samples[pos++] = sampleRight;
+                        Debug.Log($"Pos: {pos - 1}, Sample: {sampleRight}");
+                    }
                 }
                 Debug.Log("Writted" + pos);
             }
