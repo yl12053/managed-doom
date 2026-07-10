@@ -17,14 +17,14 @@ namespace ManagedDoom.Duckov
         private Config config;
         private Wad wad;
 
-        public MusStream stream;
+        private MusStream stream;
         private Bgm current;
 
-        public bool IsDisposed {get; private set;}
-        
-        public DuckovMusic(Config config, GameContent content, string sfPath)
+        public volatile float volumeMultiplier = 1f;
+
+        public DuckovMusic(Config config, GameContent content, string sfPath, float mul = 1f)
         {
-            IsDisposed = false;
+            volumeMultiplier = mul;
             try
             {
                 Debug.Log("Initialize music: ");
@@ -55,6 +55,7 @@ namespace ManagedDoom.Duckov
             var lump = "D_" + DoomInfo.BgmNames[(int)bgm].ToString().ToUpper();
             var data = wad.ReadLump(lump);
             var decoder = ReadData(data, loop);
+            Debug.Log("Music started");
             stream.SetDecoder(decoder);
 
             current = bgm;
@@ -92,18 +93,16 @@ namespace ManagedDoom.Duckov
 
             throw new Exception("Unknown format!");
         }
-        
+
         public void Dispose()
         {
-            Debug.Log("Shutdown music.");
+            Debug.LogError("Shutdown music.");
 
             if (stream != null)
             {
                 stream.Dispose();
                 stream = null;
             }
-            
-            IsDisposed = true;
         }
 
         public int MaxVolume
@@ -129,7 +128,7 @@ namespace ManagedDoom.Duckov
 
 
 
-        public class MusStream : IDisposable
+        private class MusStream : IDisposable
         {
             private static readonly int latency = 200;
             private static readonly int blockLength = 2048;
@@ -144,8 +143,6 @@ namespace ManagedDoom.Duckov
 
             private volatile IDecoder current;
             private volatile IDecoder reserved;
-
-            private EventInstance? eventInstance = null;
             
             public MusStream(DuckovMusic parent, Config config, string sfPath)
             {
@@ -161,96 +158,129 @@ namespace ManagedDoom.Duckov
 
                 left = new float[blockLength];
                 right = new float[blockLength];
+            }
+            
+            private Sound? Isound;
+            public Channel? IChannel;
 
-                // audioStream = new AudioStream(device, MusDecoder.SampleRate, 2, true, latency, blockLength);
-                // todo: stream here
+            private float[] f = new float[blockLength * 2];
+
+            public static RESULT HandleCallback(IntPtr soundPtr, IntPtr data, uint datalen)
+            {
+                Sound sound = new Sound(soundPtr);
+                
+                sound.getUserData(out IntPtr userDataPtr);
+                
+                GCHandle handle = GCHandle.FromIntPtr(userDataPtr);
+                
+                var player = (MusStream) handle.Target;
+                if (datalen == 0) return RESULT.OK;
+                
+                player.OnGetData(player.f);
+                Marshal.Copy(player.f, 0, data, player.f.Length);
+
+                return RESULT.OK;
             }
 
-            public void CreateNewInstance()
+            public static RESULT setpos(IntPtr sound, int sub, uint pos, TIMEUNIT postype)
             {
-                if (!AudioManager.TryCreateEventInstance("Music/custom", out var eventInstance))
+                return RESULT.OK;
+            }
+            
+            public void StopAndFree() 
+            {
+                if (IChannel != null) IChannel.Value.stop();
+                if (Isound != null) Isound.Value.release();
+            }
+            
+            public void PlayDirectly() 
+            {
+                StopAndFree();
+                var _handle = GCHandle.Alloc(this, GCHandleType.Pinned);
+                IntPtr contextPtr = GCHandle.ToIntPtr(_handle);
+                CREATESOUNDEXINFO exinfo = new()
                 {
-                    Debug.LogError("Failed to create music event");
-                    return;
+                    cbsize = Marshal.SizeOf(typeof(CREATESOUNDEXINFO)),
+                    format = SOUND_FORMAT.PCMFLOAT,
+                    defaultfrequency = MusDecoder.SampleRate,
+                    decodebuffersize = (uint) blockLength,
+                    length = (uint) blockLength * 2 * sizeof(float),
+                    numchannels = 2,
+                    pcmreadcallback = HandleCallback,
+                    pcmsetposcallback = setpos,
+                    userdata = contextPtr
+                };
+                RuntimeManager.CoreSystem.createSound((string) null, MODE.CREATESTREAM | MODE.OPENUSER | MODE.LOOP_NORMAL,
+                    ref exinfo, out var sound);
+                var bus = RuntimeManager.GetBus("bus:/Master/SFX");
+                bus.getChannelGroup(out var channelGroup);
+                var result = RuntimeManager.CoreSystem.playSound(sound, channelGroup, false, out var channel);
+                if (result == RESULT.OK)
+                {
+                    Isound = sound;
+                    IChannel = channel;
                 }
-                
-                // todo: 
+                else
+                {
+                    Debug.LogError(result);
+                    sound.release();
+                    Isound = null;
+                    IChannel = null;
+                }
             }
 
             public void SetDecoder(IDecoder decoder)
             {
                 reserved = decoder;
 
-                if (eventInstance != null)
+                if (IChannel == null) 
                 {
-                    ((EventInstance)eventInstance).getPlaybackState(out var state);
-                    if (state != PLAYBACK_STATE.STOPPED) return;
+                    StopAndFree();
+                    PlayDirectly();
+                } else if (IChannel.Value.isPlaying(out var val) != RESULT.OK)
+                {
+                    StopAndFree();
+                    PlayDirectly();
+                } else if (!val) {
+                    StopAndFree();
+                    PlayDirectly();
                 }
-                
-                CreateNewInstance();
-
-                /* if (audioStream.State == PlaybackState.Stopped)
-                {
-                    audioStream.Play(OnGetData);
-                } */
             }
 
-            public static int SampleSize(int channel)
-            {
-                return blockLength * channel;
-            }
-
-            public void OnGetData(float[] samples, int channel, int pos = 0)
+            private void OnGetData(float[] samples)
             {
                 if (reserved != current)
                 {
+                    Debug.Log("Switch");
                     synthesizer.Reset();
                     current = reserved;
                 }
 
-                var a = 2.0F * config.audio_musicvolume / parent.MaxVolume;
+                var a = 2.0F * config.audio_musicvolume / parent.MaxVolume * parent.volumeMultiplier;
 
                 current.RenderWaveform(synthesizer, left, right);
 
+                var pos = 0;
+                
                 for (var t = 0; t < blockLength; t++)
                 {
                     var sampleLeft = Math.Clamp(a * left[t], -1f, 1f);
                     var sampleRight = Math.Clamp(a * right[t], -1f, 1f);
-                    if (channel == 1)
-                    {
-                        samples[pos++] = (sampleLeft + sampleRight) / 2;
-                    } else if (channel % 2 == 0)
-                    {
-                        for (int i = 0; i < channel / 2; i++)
-                        {
-                            samples[pos++] = sampleLeft;
-                            samples[pos++] = sampleRight;
-                        }
-                    }
-                    else
-                    {
-                        for (int i = 0; i < (channel - 1) / 2 ; i++)
-                        {
-                            samples[pos++] = sampleLeft;
-                            samples[pos++] = sampleRight;
-                        }
-                        samples[pos++] = (sampleLeft + sampleRight) / 2;
-                    }
+                    samples[pos++] = sampleLeft;
+                    samples[pos++] = sampleRight;
                 }
-                Debug.Log("Writted" + pos);
             }
 
             public void Dispose()
             {
-                eventInstance?.stop(STOP_MODE.IMMEDIATE);
-                eventInstance?.release();
-                eventInstance = null;
+                Debug.Log("Disposed music");
+                StopAndFree();
             }
         }
 
 
 
-        public interface IDecoder
+        private interface IDecoder
         {
             void RenderWaveform(Synthesizer synthesizer, Span<float> left, Span<float> right);
         }

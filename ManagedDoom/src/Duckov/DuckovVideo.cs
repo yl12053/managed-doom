@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
+using FeatherMod.Events;
+using ManagedDoom.Event;
 using ManagedDoom.Video;
 using UnityEngine;
+using Event = FeatherMod.Events.Event;
 using Object = UnityEngine.Object;
 using Renderer = ManagedDoom.Video.Renderer;
 
@@ -23,11 +26,18 @@ namespace ManagedDoom.Duckov
 
         public static Func<bool> query = () => false;
 
+        private Action<VideoGameScreenSizeChangeEvent> calls = null;
+
         public DuckovVideo(Config config, GameContent content)
         {
             try
             {
                 renderer = new Renderer(config, content);
+                calls = @event =>
+                {
+                    renderer.threeD.WindowSize = config.video_gamescreensize;
+                };
+                EventBusManager.Instance.Sync.Register(calls);
                 textureWidth = renderer.Width;
                 textureHeight = renderer.Height;
 
@@ -65,6 +75,7 @@ namespace ManagedDoom.Duckov
             Debug.Log("Dispose");
             Object.Destroy(Texture);
             Texture = null;
+            EventBusManager.Instance.Sync.Unregister(calls);
         }
         
         public int WipeBandCount => renderer.WipeBandCount;

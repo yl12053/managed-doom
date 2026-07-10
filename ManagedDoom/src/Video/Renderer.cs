@@ -44,7 +44,7 @@ namespace ManagedDoom.Video
         private DrawScreen screen;
 
         private MenuRenderer menu;
-        private ThreeDRenderer threeD;
+        public ThreeDRenderer threeD;
         private StatusBarRenderer statusBar;
         private IntermissionRenderer intermission;
         private OpeningSequenceRenderer openingSequence;
@@ -353,6 +353,14 @@ namespace ManagedDoom.Video
             }
         }
 
+        public static int MaxGammaCorrectionLevelStatic
+        {
+            get
+            {
+                return gammaCorrectionParameters.Length - 1;
+            }
+        }
+        
         public int MaxGammaCorrectionLevel
         {
             get

@@ -208,7 +208,7 @@ namespace ManagedDoom.Duckov
                 mouseX = Input.mousePosition.x;
                 mouseY = Input.mousePosition.y;
                 mouseDeltaX = miniGame.GetAxis(1).x;
-                mouseDeltaY = miniGame.GetAxis(1).y;
+                mouseDeltaY = miniGame.GetAxis(1).y * -1f;
                 
                 if (config.mouse_disableyaxis)
                 {

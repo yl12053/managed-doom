@@ -7,13 +7,13 @@ namespace ManagedDoom.Duckov
         private double timespan;
         private double perfps;
 
-        public void DoStart()
+        public void DoStart(float mul = 1f)
         {
             config.video_fpsscale = Math.Clamp(config.video_fpsscale, 1, 100);
             var targetFps = 35 * config.video_fpsscale;
             perfps = 1d / targetFps;
             timespan = 0;
-            OnLoad();
+            OnLoad(mul);
             OnUpdate();
         }
         

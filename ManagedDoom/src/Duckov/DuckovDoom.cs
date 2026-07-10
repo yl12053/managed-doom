@@ -17,6 +17,7 @@ namespace ManagedDoom.Duckov
         public DuckovVideo video { get; private set; }
         private DuckovUserInput userInput;
         public DuckovMusic music;
+        public DuckovSound sound;
 
         private Doom doom;
         private int fpsScale;
@@ -57,27 +58,28 @@ namespace ManagedDoom.Duckov
             Close();
         }
         
-        private void OnLoad()
+        private void OnLoad(float mul = 1f)
         {
             video = new DuckovVideo(config, content);
 
             if (!args.nosound.Present && !(args.nosfx.Present && args.nomusic.Present))
             {
-                /* if (!args.nosfx.Present)
+                if (!args.nosfx.Present)
                 {
-                    sound = new SilkSound(config, content, audioDevice);
-                } */
+                    sound = new DuckovSound(config, content, mul);
+                }
                 if (!args.nomusic.Present)
                 {
                     music = new DuckovMusic(config, content, Path.Combine(
-                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), config.audio_soundfont));
+                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), 
+                        config.audio_soundfont),
+                        mul);
                 }
             }
 
             userInput = new DuckovUserInput(config, this, !args.nomouse.Present, mini);
-
-            // doom = new Doom(args, config, content, video, sound, music, userInput);
-            doom = new Doom(args, config, content, video, null, music, userInput);
+            
+            doom = new Doom(args, config, content, video, sound, music, userInput);
 
             fpsScale = args.timedemo.Present ? 1 : config.video_fpsscale;
             frameCount = -1;
@@ -104,6 +106,7 @@ namespace ManagedDoom.Duckov
 
             if (exception != null)
             {
+                Debug.LogError(exception);
                 Close();
             }
         }

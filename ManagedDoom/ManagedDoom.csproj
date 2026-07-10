@@ -20,10 +20,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DrippyAL" Version="2.1.3" />
     <PackageReference Include="MeltySynth" Version="2.4.1" />
-    <PackageReference Include="Silk.NET.Input.Glfw" Version="2.22.0" />
-    <PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.22.0" />
+  </ItemGroup>
+    
+  <ItemGroup>
+    <Publicize Include="FMODUnity" />
+    <Publicize Include="FMODUnity.RuntimeManager" />
   </ItemGroup>
 
 </Project>
