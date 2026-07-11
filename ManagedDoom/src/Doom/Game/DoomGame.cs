@@ -44,8 +44,9 @@ namespace ManagedDoom
 		private string saveGameDescription;
 
 		private string wadName;
+		private string namespaces;
 
-		public DoomGame(GameContent content, GameOptions options, string wadName)
+		public DoomGame(GameContent content, GameOptions options, string wadName, string namespaces)
 		{
 			this.content = content;
 			this.options = options;
@@ -55,6 +56,7 @@ namespace ManagedDoom
 			gameTic = 0;
 
 			this.wadName = wadName;
+			this.namespaces = namespaces;
 		}
 
 
@@ -324,7 +326,7 @@ namespace ManagedDoom
 			gameAction = GameAction.Nothing;
 
 			Debug.Log($"Loading to: {loadGameSlotNumber},{wadName}");
-			SaveAndLoad.Load(this, loadGameSlotNumber, wadName);
+			SaveAndLoad.Load(this, loadGameSlotNumber, wadName, namespaces);
 		}
 
 		private void DoSaveGame()
@@ -332,7 +334,7 @@ namespace ManagedDoom
 			gameAction = GameAction.Nothing;
 			
 			Debug.Log($"Saving to: {saveGameSlotNumber},{wadName}");
-			SaveAndLoad.Save(this, saveGameDescription, saveGameSlotNumber, wadName);
+			SaveAndLoad.Save(this, saveGameDescription, saveGameSlotNumber, wadName, namespaces);
 			world.ConsolePlayer.SendMessage(DoomInfo.Strings.GGSAVED);
 		}
 

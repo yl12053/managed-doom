@@ -50,18 +50,18 @@ namespace ManagedDoom
             EndSpecials
         }
 
-        public static void Save(DoomGame game, string description, int slotNum, string wadName)
+        public static void Save(DoomGame game, string description, int slotNum, string wadName, string namespaces)
         {
             var sg = new SaveGame(description);
-            sg.Save(game, slotNum, wadName);
+            sg.Save(game, slotNum, wadName, namespaces);
         }
 
-        public static void Load(DoomGame game, int slotNum, string wadName)
+        public static void Load(DoomGame game, int slotNum, string wadName, string namespaces)
         {
             var options = game.Options;
             game.InitNew(options.Skill, options.Episode, options.Map);
 
-            byte[] data = SaveUtils.Load<byte[]>(new Identifier("DuckovDOOM", $"save_{slotNum}_{wadName}"));
+            byte[] data = SaveUtils.Load<byte[]>(new Identifier(namespaces, $"save_{slotNum}_{wadName}"));
             if (data == null) throw new FileNotFoundException("Saves not found.");
             var lg = new LoadGame(data);
             lg.Load(game);
@@ -106,7 +106,7 @@ namespace ManagedDoom
                 ptr += versionSize;
             }
 
-            public void Save(DoomGame game, int slot, string wadname)
+            public void Save(DoomGame game, int slot, string wadname, string namespaces)
             {
                 var options = game.World.Options;
                 data[ptr++] = (byte)options.Skill;
@@ -128,7 +128,7 @@ namespace ManagedDoom
 
                 data[ptr++] = 0x1d;
 
-                SaveUtils.Save(new Identifier("DuckovDOOM", $"save_{slot}_{wadname}"), data);
+                SaveUtils.Save(new Identifier(namespaces, $"save_{slot}_{wadname}"), data);
             }
 
             private void PadPointer()

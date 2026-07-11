@@ -48,7 +48,7 @@ namespace ManagedDoom
 
         private SaveSlots saveSlots;
 
-        public DoomMenu(Doom doom, string wadName)
+        public DoomMenu(Doom doom, string wadName, string namespaces)
         {
             this.doom = doom;
 
@@ -294,7 +294,7 @@ namespace ManagedDoom
 
             selectedEpisode = 1;
 
-            saveSlots = new SaveSlots(wadName);
+            saveSlots = new SaveSlots(wadName, namespaces);
         }
 
         public bool DoEvent(DoomEvent e)

@@ -31,10 +31,12 @@ namespace ManagedDoom
         private string[] slots;
 
         private string wadName;
+        private string namespaces;
 
-        public SaveSlots(string wadName)
+        public SaveSlots(string wadName, string namespaces)
         {
             this.wadName = wadName;
+            this.namespaces = namespaces;
         }
 
         private void ReadSlots()
@@ -44,7 +46,7 @@ namespace ManagedDoom
             var buffer = new byte[descriptionSize];
             for (var i = 0; i < slots.Length; i++)
             {
-                byte[] data = SaveUtils.Load<byte[]>(new Identifier("DuckovDOOM", $"save_{i}_{wadName}"));
+                byte[] data = SaveUtils.Load<byte[]>(new Identifier(namespaces, $"save_{i}_{wadName}"));
                 if (data != null)
                 {
                     data.AsSpan(0, descriptionSize).CopyTo(buffer);

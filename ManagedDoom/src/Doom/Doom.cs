@@ -61,10 +61,13 @@ namespace ManagedDoom
         private bool mouseGrabbed;
 
         private string wadName;
+        private string namespaces;
 
-        public Doom(CommandLineArgs args, Config config, GameContent content, IVideo video, ISound sound, IMusic music, IUserInput userInput, string wadName)
+        public Doom(CommandLineArgs args, Config config, GameContent content, IVideo video, ISound sound, IMusic music, 
+            IUserInput userInput, string wadName, string namespaces)
         {
             this.wadName = wadName;
+            this.namespaces = namespaces;
             video = video ?? NullVideo.GetInstance();
             sound = sound ?? NullSound.GetInstance();
             music = music ?? NullMusic.GetInstance();
@@ -86,16 +89,16 @@ namespace ManagedDoom
             options.Music = music;
             options.UserInput = userInput;
 
-            menu = new DoomMenu(this, wadName);
+            menu = new DoomMenu(this, wadName, namespaces);
 
-            opening = new OpeningSequence(content, options, wadName);
+            opening = new OpeningSequence(content, options, wadName, namespaces);
 
             cmds = new TicCmd[Player.MaxPlayerCount];
             for (var i = 0; i < Player.MaxPlayerCount; i++)
             {
                 cmds[i] = new TicCmd();
             }
-            game = new DoomGame(content, options, wadName);
+            game = new DoomGame(content, options, wadName, namespaces);
 
             wipeEffect = new WipeEffect(video.WipeBandCount, video.WipeHeight);
             wiping = false;
@@ -170,13 +173,13 @@ namespace ManagedDoom
             if (args.playdemo.Present)
             {
                 nextState = DoomState.DemoPlayback;
-                demoPlayback = new DemoPlayback(args, content, options, args.playdemo.Value, wadName);
+                demoPlayback = new DemoPlayback(args, content, options, args.playdemo.Value, wadName, namespaces);
             }
 
             if (args.timedemo.Present)
             {
                 nextState = DoomState.DemoPlayback;
-                demoPlayback = new DemoPlayback(args, content, options, args.timedemo.Value, wadName);
+                demoPlayback = new DemoPlayback(args, content, options, args.timedemo.Value, wadName, namespaces);
             }
         }
 

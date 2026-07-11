@@ -61,7 +61,7 @@ namespace ManagedDoom.Duckov
             Close();
         }
         
-        private void OnLoad(float mul = 1f)
+        private void OnLoad(float mul, string namespaces)
         {
             video = new DuckovVideo(config, content);
 
@@ -82,7 +82,7 @@ namespace ManagedDoom.Duckov
 
             userInput = new DuckovUserInput(config, this, !args.nomouse.Present, mini);
             
-            doom = new Doom(args, config, content, video, sound, music, userInput, wadName);
+            doom = new Doom(args, config, content, video, sound, music, userInput, wadName, namespaces);
 
             fpsScale = args.timedemo.Present ? 1 : config.video_fpsscale;
             frameCount = -1;

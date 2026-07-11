@@ -40,11 +40,14 @@ namespace ManagedDoom
 
         private string wadName;
 
-        public OpeningSequence(GameContent content, GameOptions options, String wadName)
+        private string namespaces;
+
+        public OpeningSequence(GameContent content, GameOptions options, string wadName, string namespaces)
         {
             this.wadName = wadName;
             this.content = content;
             this.options = options;
+            this.namespaces = namespaces;
 
             cmds = new TicCmd[Player.MaxPlayerCount];
             for (var i = 0; i < Player.MaxPlayerCount; i++)
@@ -255,7 +258,7 @@ namespace ManagedDoom
             demo.Options.Sound = options.Sound;
             demo.Options.Music = options.Music;
 
-            game = new DoomGame(content, demo.Options, wadName);
+            game = new DoomGame(content, demo.Options, wadName, namespaces);
             game.DeferedInitNew();
         }
 
