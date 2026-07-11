@@ -38,8 +38,11 @@ namespace ManagedDoom
 
         private bool reset;
 
-        public OpeningSequence(GameContent content, GameOptions options)
+        private string wadName;
+
+        public OpeningSequence(GameContent content, GameOptions options, String wadName)
         {
+            this.wadName = wadName;
             this.content = content;
             this.options = options;
 
@@ -82,25 +85,25 @@ namespace ManagedDoom
                         StartTitleScreen();
                         break;
                     case 1:
-                        StartDemo("DEMO1");
+                        StartDemo("DEMO1", wadName);
                         break;
                     case 2:
                         StartCreditScreen();
                         break;
                     case 3:
-                        StartDemo("DEMO2");
+                        StartDemo("DEMO2", wadName);
                         break;
                     case 4:
                         StartTitleScreen();
                         break;
                     case 5:
-                        StartDemo("DEMO3");
+                        StartDemo("DEMO3", wadName);
                         break;
                     case 6:
                         StartCreditScreen();
                         break;
                     case 7:
-                        StartDemo("DEMO4");
+                        StartDemo("DEMO4", wadName);
                         break;
                 }
 
@@ -240,7 +243,7 @@ namespace ManagedDoom
             timer = 200;
         }
 
-        private void StartDemo(string lump)
+        private void StartDemo(string lump, string wadName)
         {
             state = OpeningSequenceState.Demo;
 
@@ -252,7 +255,7 @@ namespace ManagedDoom
             demo.Options.Sound = options.Sound;
             demo.Options.Music = options.Music;
 
-            game = new DoomGame(content, demo.Options);
+            game = new DoomGame(content, demo.Options, wadName);
             game.DeferedInitNew();
         }
 

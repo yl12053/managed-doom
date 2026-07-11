@@ -16,6 +16,8 @@
 
 
 using System;
+using FeatherMod.Events;
+using ManagedDoom.Event;
 
 namespace ManagedDoom
 {
@@ -162,6 +164,8 @@ namespace ManagedDoom
                     return false;
                 }
 
+                if (!world.options.DemoPlayback) EventBusManager.Instance.Sync.Post(new DoomPickupWeapon(weapon, dropped));
+
                 player.BonusCount += bonusAdd;
                 player.WeaponOwned[(int)weapon] = true;
 
@@ -212,6 +216,7 @@ namespace ManagedDoom
                 gaveWeapon = true;
                 player.WeaponOwned[(int)weapon] = true;
                 player.PendingWeapon = weapon;
+                if (!world.options.DemoPlayback) EventBusManager.Instance.Sync.Post(new DoomPickupWeapon(weapon, true));
             }
 
             return (gaveWeapon || gaveAmmo);

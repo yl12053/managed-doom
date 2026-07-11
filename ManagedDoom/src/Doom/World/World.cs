@@ -21,7 +21,7 @@ namespace ManagedDoom
 {
     public sealed partial class World
     {
-        private GameOptions options;
+        public GameOptions options;
         private DoomGame game;
         private DoomRandom random;
 

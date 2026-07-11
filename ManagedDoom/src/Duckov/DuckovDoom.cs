@@ -25,10 +25,12 @@ namespace ManagedDoom.Duckov
 
         private Exception exception;
         private MiniGame mini;
+
+        private string wadName;
         
         public bool Disposed { get; private set; }
 
-        public DuckovDoom(CommandLineArgs args, Config config, MiniGame mini)
+        public DuckovDoom(CommandLineArgs args, Config config, MiniGame mini, string wadName)
         {
             Disposed = false;
             try
@@ -41,6 +43,7 @@ namespace ManagedDoom.Duckov
                 config.video_screenheight = Math.Clamp(config.video_screenheight, 200, 2000);
                 this.config = config;
                 this.mini = mini;
+                this.wadName = wadName;
             }
             catch (Exception e)
             {
@@ -79,7 +82,7 @@ namespace ManagedDoom.Duckov
 
             userInput = new DuckovUserInput(config, this, !args.nomouse.Present, mini);
             
-            doom = new Doom(args, config, content, video, sound, music, userInput);
+            doom = new Doom(args, config, content, video, sound, music, userInput, wadName);
 
             fpsScale = args.timedemo.Present ? 1 : config.video_fpsscale;
             frameCount = -1;

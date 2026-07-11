@@ -30,7 +30,7 @@ namespace ManagedDoom
         private Stopwatch stopwatch;
         private int frameCount;
 
-        public DemoPlayback(CommandLineArgs args, GameContent content, GameOptions options, string demoName)
+        public DemoPlayback(CommandLineArgs args, GameContent content, GameOptions options, string demoName, string wadName)
         {
             if (File.Exists(demoName))
             {
@@ -68,7 +68,7 @@ namespace ManagedDoom
                 cmds[i] = new TicCmd();
             }
 
-            game = new DoomGame(content, demo.Options);
+            game = new DoomGame(content, demo.Options, wadName);
             game.DeferedInitNew();
 
             stopwatch = new Stopwatch();

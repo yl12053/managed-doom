@@ -60,8 +60,11 @@ namespace ManagedDoom
 
         private bool mouseGrabbed;
 
-        public Doom(CommandLineArgs args, Config config, GameContent content, IVideo video, ISound sound, IMusic music, IUserInput userInput)
+        private string wadName;
+
+        public Doom(CommandLineArgs args, Config config, GameContent content, IVideo video, ISound sound, IMusic music, IUserInput userInput, string wadName)
         {
+            this.wadName = wadName;
             video = video ?? NullVideo.GetInstance();
             sound = sound ?? NullSound.GetInstance();
             music = music ?? NullMusic.GetInstance();
@@ -85,14 +88,14 @@ namespace ManagedDoom
 
             menu = new DoomMenu(this);
 
-            opening = new OpeningSequence(content, options);
+            opening = new OpeningSequence(content, options, wadName);
 
             cmds = new TicCmd[Player.MaxPlayerCount];
             for (var i = 0; i < Player.MaxPlayerCount; i++)
             {
                 cmds[i] = new TicCmd();
             }
-            game = new DoomGame(content, options);
+            game = new DoomGame(content, options, wadName);
 
             wipeEffect = new WipeEffect(video.WipeBandCount, video.WipeHeight);
             wiping = false;
@@ -167,13 +170,13 @@ namespace ManagedDoom
             if (args.playdemo.Present)
             {
                 nextState = DoomState.DemoPlayback;
-                demoPlayback = new DemoPlayback(args, content, options, args.playdemo.Value);
+                demoPlayback = new DemoPlayback(args, content, options, args.playdemo.Value, wadName);
             }
 
             if (args.timedemo.Present)
             {
                 nextState = DoomState.DemoPlayback;
-                demoPlayback = new DemoPlayback(args, content, options, args.timedemo.Value);
+                demoPlayback = new DemoPlayback(args, content, options, args.timedemo.Value, wadName);
             }
         }
 

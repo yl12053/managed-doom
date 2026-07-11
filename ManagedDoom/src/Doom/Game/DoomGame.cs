@@ -17,6 +17,8 @@
 
 using System;
 using System.IO;
+using FeatherMod.Events;
+using ManagedDoom.Event;
 
 namespace ManagedDoom
 {
@@ -40,7 +42,9 @@ namespace ManagedDoom
 		private int saveGameSlotNumber;
 		private string saveGameDescription;
 
-		public DoomGame(GameContent content, GameOptions options)
+		private string wadName;
+
+		public DoomGame(GameContent content, GameOptions options, string wadName)
 		{
 			this.content = content;
 			this.options = options;
@@ -48,6 +52,8 @@ namespace ManagedDoom
 			gameAction = GameAction.Nothing;
 
 			gameTic = 0;
+
+			this.wadName = wadName;
 		}
 
 
@@ -300,6 +306,9 @@ namespace ManagedDoom
 			world = new World(content, options, this);
 
 			options.UserInput.Reset();
+
+			if (!options.DemoPlayback) EventBusManager.Instance.Sync.Post(
+				new DoomLoadLevel(options.GameMode == GameMode.Commercial ? 0 : options.Episode, options.Map, wadName));
 		}
 
 		private void DoNewGame()
@@ -467,6 +476,10 @@ namespace ManagedDoom
 
 			gameState = GameState.Intermission;
 			intermission = new Intermission(options, imInfo);
+			
+			int finishedEpisode = options.Episode;
+			int finishedMap = options.Map;
+			if (!options.DemoPlayback) EventBusManager.Instance.Sync.Post(new DoomFinishedLevel(wadName, options.GameMode == GameMode.Commercial ? 0 : finishedEpisode, finishedMap));
 		}
 
 		private void DoWorldDone()
