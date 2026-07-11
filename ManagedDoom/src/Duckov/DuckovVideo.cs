@@ -21,9 +21,6 @@ namespace ManagedDoom.Duckov
 
         private byte[] textureData;
 
-        private int windowWidth;
-        private int windowHeight;
-
         public static Func<bool> query = () => false;
 
         private Action<VideoGameScreenSizeChangeEvent> calls = null;

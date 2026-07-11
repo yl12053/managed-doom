@@ -26,7 +26,6 @@ public class DuckovSound: ISound, IDisposable
     private byte[][] buffers;
     private int[] bufferSampleRate;
     private float[] amplitudes;
-    private bool bufferInited = false;
     
     private DoomRandom random;
     
@@ -96,7 +95,9 @@ public class DuckovSound: ISound, IDisposable
         }
     }
     
+    #nullable enable
     private PackedAudio? uiEvent = null;
+    #nullable restore
 
     private Mobj listener;
 
@@ -394,63 +395,65 @@ public class DuckovSound: ISound, IDisposable
         return localPos.ToFMODVector();
     }
 
+    #nullable enable
     public PackedAudio? MakePlay(byte[] sample, int sampleRate, float vol, float pitch, Vector3? pos = null, bool paused = false)
     {
-            if (Disposed) return null;
-            if (group == null) return null;
-            CREATESOUNDEXINFO exinfo = new()
+        if (Disposed) return null;
+        if (group == null) return null;
+        CREATESOUNDEXINFO exinfo = new()
+        {
+            cbsize = Marshal.SizeOf(typeof(CREATESOUNDEXINFO)),
+            format = SOUND_FORMAT.PCM8,
+            defaultfrequency = sampleRate,
+            decodebuffersize = (uint) sample.Length,
+            length = (uint) sample.Length,
+            numchannels = 1,
+        };
+        GCHandle handle = GCHandle.Alloc(sample, GCHandleType.Pinned);
+        RuntimeManager.CoreSystem.createSound(handle.AddrOfPinnedObject(), (pos == null ? MODE._2D : MODE._3D) | MODE.OPENMEMORY | MODE.OPENRAW, ref exinfo,
+            out var sound);
+        // handle.Free();
+        var result = RuntimeManager.CoreSystem.playSound(sound, group.Value, true, out var channel);
+        if (result == RESULT.OK)
+        {
+            if (pos != null)
             {
-                cbsize = Marshal.SizeOf(typeof(CREATESOUNDEXINFO)),
-                format = SOUND_FORMAT.PCM8,
-                defaultfrequency = sampleRate,
-                decodebuffersize = (uint) sample.Length,
-                length = (uint) sample.Length,
-                numchannels = 1,
-            };
-            GCHandle handle = GCHandle.Alloc(sample, GCHandleType.Pinned);
-            RuntimeManager.CoreSystem.createSound(handle.AddrOfPinnedObject(), (pos == null ? MODE._2D : MODE._3D) | MODE.OPENMEMORY | MODE.OPENRAW, ref exinfo,
-                out var sound);
-            // handle.Free();
-            var result = RuntimeManager.CoreSystem.playSound(sound, group.Value, true, out var channel);
-            if (result == RESULT.OK)
-            {
-                if (pos != null)
+                var vec = VectorCalculation(pos.Value);
+                var emp = new VECTOR()
                 {
-                    var vec = VectorCalculation(pos.Value);
-                    var emp = new VECTOR()
-                    {
-                        x = 0,
-                        y = 0,
-                        z = 0
-                    };
-                    channel.set3DAttributes(
-                        ref vec,
-                        ref emp
-                    );
-                }
+                    x = 0,
+                    y = 0,
+                    z = 0
+                };
+                channel.set3DAttributes(
+                    ref vec,
+                    ref emp
+                );
+            }
 
-                channel.setVolume(vol);
-                channel.setPitch(pitch);
-                var res2 = paused ? RESULT.OK : channel.setPaused(false);
-                if (res2 == RESULT.OK)
-                {
-                    return new PackedAudio()
-                    {
-                        channel = channel,
-                        sound = sound,
-                        vec = pos.GetValueOrDefault(Vector3.zero)
-                    };
-                }
-                Debug.LogError("2" + res2);
-                channel.stop();
-            }
-            else
+            channel.setVolume(vol);
+            channel.setPitch(pitch);
+            var res2 = paused ? RESULT.OK : channel.setPaused(false);
+            if (res2 == RESULT.OK)
             {
-                Debug.LogError("1" + result);
+                return new PackedAudio()
+                {
+                    channel = channel,
+                    sound = sound,
+                    vec = pos.GetValueOrDefault(Vector3.zero)
+                };
             }
-            sound.release();
-            return null;
+            Debug.LogError("2" + res2);
+            channel.stop();
+        }
+        else
+        {
+            Debug.LogError("1" + result);
+        }
+        sound.release();
+        return null;
     }
+    #nullable restore
     
     public void StartSound(Sfx sfx)
     {

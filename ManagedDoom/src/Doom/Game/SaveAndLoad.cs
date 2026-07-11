@@ -17,6 +17,8 @@
 
 using System;
 using System.IO;
+using FeatherMod.Saves;
+using FeatherMod.Utils;
 
 namespace ManagedDoom
 {
@@ -48,18 +50,20 @@ namespace ManagedDoom
             EndSpecials
         }
 
-        public static void Save(DoomGame game, string description, string path)
+        public static void Save(DoomGame game, string description, int slotNum, string wadName)
         {
             var sg = new SaveGame(description);
-            sg.Save(game, path);
+            sg.Save(game, slotNum, wadName);
         }
 
-        public static void Load(DoomGame game, string path)
+        public static void Load(DoomGame game, int slotNum, string wadName)
         {
             var options = game.Options;
             game.InitNew(options.Skill, options.Episode, options.Map);
 
-            var lg = new LoadGame(File.ReadAllBytes(path));
+            byte[] data = SaveUtils.Load<byte[]>(new Identifier("DuckovDOOM", $"save_{slotNum}_{wadName}"));
+            if (data == null) throw new FileNotFoundException("Saves not found.");
+            var lg = new LoadGame(data);
             lg.Load(game);
         }
 
@@ -102,7 +106,7 @@ namespace ManagedDoom
                 ptr += versionSize;
             }
 
-            public void Save(DoomGame game, string path)
+            public void Save(DoomGame game, int slot, string wadname)
             {
                 var options = game.World.Options;
                 data[ptr++] = (byte)options.Skill;
@@ -124,10 +128,7 @@ namespace ManagedDoom
 
                 data[ptr++] = 0x1d;
 
-                using (var writer = new FileStream(path, FileMode.Create, FileAccess.Write))
-                {
-                    writer.Write(data, 0, ptr);
-                }
+                SaveUtils.Save(new Identifier("DuckovDOOM", $"save_{slot}_{wadname}"), data);
             }
 
             private void PadPointer()

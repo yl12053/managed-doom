@@ -86,7 +86,7 @@ namespace ManagedDoom
             options.Music = music;
             options.UserInput = userInput;
 
-            menu = new DoomMenu(this);
+            menu = new DoomMenu(this, wadName);
 
             opening = new OpeningSequence(content, options, wadName);
 

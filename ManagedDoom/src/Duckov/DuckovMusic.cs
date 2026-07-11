@@ -130,7 +130,6 @@ namespace ManagedDoom.Duckov
 
         private class MusStream : IDisposable
         {
-            private static readonly int latency = 200;
             private static readonly int blockLength = 2048;
 
             private DuckovMusic parent;

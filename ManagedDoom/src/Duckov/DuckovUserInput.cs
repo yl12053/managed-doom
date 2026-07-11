@@ -21,8 +21,6 @@ namespace ManagedDoom.Duckov
         private float mouseDeltaY;
         private MiniGame miniGame;
 
-        private DuckovDoom doom;
-
         public DuckovUserInput(Config config, DuckovDoom doom, bool useMouse, MiniGame mini)
         {
             try

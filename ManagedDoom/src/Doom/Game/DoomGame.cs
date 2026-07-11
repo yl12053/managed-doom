@@ -19,6 +19,7 @@ using System;
 using System.IO;
 using FeatherMod.Events;
 using ManagedDoom.Event;
+using UnityEngine;
 
 namespace ManagedDoom
 {
@@ -322,18 +323,16 @@ namespace ManagedDoom
 		{
 			gameAction = GameAction.Nothing;
 
-			var directory = ConfigUtilities.GetExeDirectory();
-			var path = Path.Combine(directory, "doomsav" + loadGameSlotNumber + ".dsg");
-			SaveAndLoad.Load(this, path);
+			Debug.Log($"Loading to: {loadGameSlotNumber},{wadName}");
+			SaveAndLoad.Load(this, loadGameSlotNumber, wadName);
 		}
 
 		private void DoSaveGame()
 		{
 			gameAction = GameAction.Nothing;
-
-			var directory = ConfigUtilities.GetExeDirectory();
-			var path = Path.Combine(directory, "doomsav" + saveGameSlotNumber + ".dsg");
-			SaveAndLoad.Save(this, saveGameDescription, path);
+			
+			Debug.Log($"Saving to: {saveGameSlotNumber},{wadName}");
+			SaveAndLoad.Save(this, saveGameDescription, saveGameSlotNumber, wadName);
 			world.ConsolePlayer.SendMessage(DoomInfo.Strings.GGSAVED);
 		}
 

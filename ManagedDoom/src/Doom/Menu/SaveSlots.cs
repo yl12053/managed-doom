@@ -17,6 +17,9 @@
 
 using System;
 using System.IO;
+using FeatherMod.Saves;
+using FeatherMod.Utils;
+using UnityEngine;
 
 namespace ManagedDoom
 {
@@ -27,30 +30,25 @@ namespace ManagedDoom
 
         private string[] slots;
 
+        private string wadName;
+
+        public SaveSlots(string wadName)
+        {
+            this.wadName = wadName;
+        }
+
         private void ReadSlots()
         {
             slots = new string[slotCount];
-
-            var directory = ConfigUtilities.GetExeDirectory();
+            
             var buffer = new byte[descriptionSize];
             for (var i = 0; i < slots.Length; i++)
             {
-                var path = Path.Combine(directory, "doomsav" + i + ".dsg");
-                if (File.Exists(path))
+                byte[] data = SaveUtils.Load<byte[]>(new Identifier("DuckovDOOM", $"save_{i}_{wadName}"));
+                if (data != null)
                 {
-                    using (var reader = new FileStream(path, FileMode.Open, FileAccess.Read))
-                    {
-                        int totalread = 0;
-                        while (totalread < descriptionSize)
-                        {
-                            int read = reader.Read(buffer, totalread, descriptionSize - totalread);
-                            if (read == 0)
-                            {
-                                throw new EndOfStreamException("Exc");
-                            }
-                        }
-                        slots[i] = DoomInterop.ToString(buffer, 0, buffer.Length);
-                    }
+                    data.AsSpan(0, descriptionSize).CopyTo(buffer);
+                    slots[i] = DoomInterop.ToString(buffer, 0, buffer.Length);
                 }
             }
         }
