@@ -18,7 +18,6 @@
 using System;
 using FeatherMod.Events;
 using JetBrains.Annotations;
-using ManagedDoom.Duckov;
 using ManagedDoom.Event;
 using ManagedDoom.Video;
 using ModSetting.Api;
@@ -164,76 +163,7 @@ namespace ManagedDoom
                     isRestoredFromFile = true;
                 }
 
-                settingsBuilder
-                    .AddKeybinding("key_turnleft", getName("key.doom.turn_left"), key_turnleft, KeyCode.LeftArrow,
-                        (v) => key_turnleft = v)
-                    .AddKeybinding("key_turnright", getName("key.doom.turn_right"), key_turnright, KeyCode.RightArrow,
-                        (v) => key_turnright = v)
-                    .AddKeybinding("key_run", getName("key.doom.run"), key_run, KeyCode.LeftShift, (v) => key_run = v)
-                    .AddKeybinding("key_strafe", getName("key.doom.strafe"), key_strafe, KeyCode.LeftAlt,
-                        (v) => key_strafe = v)
-                    .AddSlider("mouse_sensitivity", getName("mouse.doom.sensitivity"), mouse_sensitivity, 1, 15,
-                        v => _mouse_sensitivity = v, 2)
-                    .AddToggle("mouse_disableyaxis", getName("mouse.doom.disableyaxis"), mouse_disableyaxis,
-                        v => mouse_disableyaxis = v)
-                    .AddToggle(nameof(game_alwaysrun), getName("game.doom.alwaysrun"), game_alwaysrun,
-                        v => game_alwaysrun = v)
-                    .AddToggle(nameof(video_highresolution), getName("video.doom.highresolution"), video_highresolution,
-                        v => video_highresolution = v)
-                    .AddSlider(nameof(video_gamescreensize), getName("video.doom.gamescreensize"), video_gamescreensize,
-                        0, ThreeDRenderer.MaxScreenSize, v =>
-                        {
-                            _video_gamescreensize = v;
-                            EventBusManager.Instance.Sync.Post(new VideoGameScreenSizeChangeEvent());
-                        }, 1)
-                    .AddSlider(nameof(video_gammacorrection), getName("video.doom.gammacorrection"),
-                        video_gammacorrection, 0, Renderer.MaxGammaCorrectionLevelStatic,
-                        v => video_gammacorrection = v, 10)
-                    .AddSlider(nameof(video_fpsscale), getName("video.doom.fpsscale"), video_fpsscale, 0, 100,
-                        v => video_fpsscale = v, 3)
-                    .AddSlider(nameof(audio_soundvolume), getName("audio.doom.soundvolume"), audio_soundvolume, 0, 15,
-                        v => _audio_soundvolume = v, 2)
-                    .AddSlider(nameof(audio_musicvolume), getName("audio.doom.musicvolume"), audio_musicvolume, 0, 15,
-                        v => _audio_musicvolume = v, 2)
-                    .AddToggle(nameof(audio_randompitch), getName("audio.doom.randompitch"), audio_randompitch,
-                        v => audio_randompitch = v)
-                    .AddToggle(nameof(audio_musiceffect), getName("audio.doom.musiceffect"), audio_musiceffect,
-                        v => audio_musiceffect = v)
-                    .AddButton("reset_all", getName("settings.doom.reset"), getName("settings.doom.reset"), () =>
-                    {
-                        var defaults = new Config();
-                        key_turnleft = defaults.key_turnleft;
-                        key_turnright = defaults.key_turnright;
-                        key_run = defaults.key_run;
-                        key_strafe = defaults.key_strafe;
-                        _mouse_sensitivity = defaults._mouse_sensitivity;
-                        mouse_disableyaxis = defaults.mouse_disableyaxis;
-                        game_alwaysrun = defaults.game_alwaysrun;
-                        video_highresolution = defaults.video_highresolution;
-                        _video_gamescreensize = defaults._video_gamescreensize;
-                        video_gammacorrection = defaults.video_gammacorrection;
-                        video_fpsscale = defaults.video_fpsscale;
-                        _audio_soundvolume = defaults._audio_soundvolume;
-                        _audio_musicvolume = defaults._audio_musicvolume;
-                        audio_randompitch = defaults.audio_randompitch;
-                        audio_musiceffect = defaults.audio_musiceffect;
-                        settingsBuilder.SetValue("key_turnleft", key_turnleft);
-                        settingsBuilder.SetValue("key_turnright", key_turnright);
-                        settingsBuilder.SetValue("key_run", key_run);
-                        settingsBuilder.SetValue("key_strafe", key_strafe);
-                        settingsBuilder.SetValue("mouse_sensitivity", mouse_sensitivity);
-                        settingsBuilder.SetValue("mouse_disableyaxis", mouse_disableyaxis);
-                        settingsBuilder.SetValue(nameof(game_alwaysrun), game_alwaysrun);
-                        settingsBuilder.SetValue(nameof(video_highresolution), video_highresolution);
-                        settingsBuilder.SetValue(nameof(video_gamescreensize), video_gamescreensize);
-                        settingsBuilder.SetValue(nameof(video_gammacorrection), video_gammacorrection);
-                        settingsBuilder.SetValue(nameof(video_fpsscale), video_fpsscale);
-                        settingsBuilder.SetValue(nameof(audio_soundvolume), audio_soundvolume);
-                        settingsBuilder.SetValue(nameof(audio_musicvolume), audio_musicvolume);
-                        settingsBuilder.SetValue(nameof(audio_randompitch), audio_randompitch);
-                        settingsBuilder.SetValue(nameof(audio_musiceffect), audio_musiceffect);
-                        EventBusManager.Instance.Sync.Post(new VideoGameScreenSizeChangeEvent());
-                    });
+                addUI();
 
                 Debug.Log("OK");
             }
@@ -241,6 +171,104 @@ namespace ManagedDoom
             {
                 Debug.LogError(e);
             }
+        }
+
+        public void refreshUI()
+        {
+            if (settingBuilder == null) return;
+            settingBuilder
+                .RemoveUI("key_turnleft", v => { })
+                .RemoveUI("key_turnright", v => { })
+                .RemoveUI("key_run", v => { })
+                .RemoveUI("key_strafe", v => { })
+                .RemoveUI("mouse_sensitivity", v => { })
+                .RemoveUI("mouse_disableyaxis", v => { })
+                .RemoveUI(nameof(game_alwaysrun), v => { })
+                .RemoveUI(nameof(video_highresolution), v => { })
+                .RemoveUI(nameof(video_gamescreensize), v => { })
+                .RemoveUI(nameof(video_gammacorrection), v => { })
+                .RemoveUI(nameof(video_fpsscale), v => { })
+                .RemoveUI(nameof(audio_soundvolume), v => { })
+                .RemoveUI(nameof(audio_musicvolume), v => { })
+                .RemoveUI(nameof(audio_randompitch), v => { })
+                .RemoveUI(nameof(audio_musiceffect), v => { })
+                .RemoveUI("reset_all", v => { });
+            addUI();
+        }
+
+        public void addUI()
+        {
+            if (settingBuilder == null) return;
+            settingBuilder
+                .AddKeybinding("key_turnleft", getName("key.doom.turn_left"), key_turnleft, KeyCode.LeftArrow,
+                    (v) => key_turnleft = v)
+                .AddKeybinding("key_turnright", getName("key.doom.turn_right"), key_turnright, KeyCode.RightArrow,
+                    (v) => key_turnright = v)
+                .AddKeybinding("key_run", getName("key.doom.run"), key_run, KeyCode.LeftShift, (v) => key_run = v)
+                .AddKeybinding("key_strafe", getName("key.doom.strafe"), key_strafe, KeyCode.LeftAlt,
+                    (v) => key_strafe = v)
+                .AddSlider("mouse_sensitivity", getName("mouse.doom.sensitivity"), mouse_sensitivity, 1, 15,
+                    v => _mouse_sensitivity = v, 2)
+                .AddToggle("mouse_disableyaxis", getName("mouse.doom.disableyaxis"), mouse_disableyaxis,
+                    v => mouse_disableyaxis = v)
+                .AddToggle(nameof(game_alwaysrun), getName("game.doom.alwaysrun"), game_alwaysrun,
+                    v => game_alwaysrun = v)
+                .AddToggle(nameof(video_highresolution), getName("video.doom.highresolution"), video_highresolution,
+                    v => video_highresolution = v)
+                .AddSlider(nameof(video_gamescreensize), getName("video.doom.gamescreensize"), video_gamescreensize,
+                    0, ThreeDRenderer.MaxScreenSize, v =>
+                    {
+                        _video_gamescreensize = v;
+                        EventBusManager.Instance.Sync.Post(new VideoGameScreenSizeChangeEvent());
+                    }, 1)
+                .AddSlider(nameof(video_gammacorrection), getName("video.doom.gammacorrection"),
+                    video_gammacorrection, 0, Renderer.MaxGammaCorrectionLevelStatic,
+                    v => video_gammacorrection = v, 10)
+                .AddSlider(nameof(video_fpsscale), getName("video.doom.fpsscale"), video_fpsscale, 0, 100,
+                    v => video_fpsscale = v, 3)
+                .AddSlider(nameof(audio_soundvolume), getName("audio.doom.soundvolume"), audio_soundvolume, 0, 15,
+                    v => _audio_soundvolume = v, 2)
+                .AddSlider(nameof(audio_musicvolume), getName("audio.doom.musicvolume"), audio_musicvolume, 0, 15,
+                    v => _audio_musicvolume = v, 2)
+                .AddToggle(nameof(audio_randompitch), getName("audio.doom.randompitch"), audio_randompitch,
+                    v => audio_randompitch = v)
+                .AddToggle(nameof(audio_musiceffect), getName("audio.doom.musiceffect"), audio_musiceffect,
+                    v => audio_musiceffect = v)
+                .AddButton("reset_all", getName("settings.doom.reset"), getName("settings.doom.reset"), () =>
+                {
+                    var defaults = new Config();
+                    key_turnleft = defaults.key_turnleft;
+                    key_turnright = defaults.key_turnright;
+                    key_run = defaults.key_run;
+                    key_strafe = defaults.key_strafe;
+                    _mouse_sensitivity = defaults._mouse_sensitivity;
+                    mouse_disableyaxis = defaults.mouse_disableyaxis;
+                    game_alwaysrun = defaults.game_alwaysrun;
+                    video_highresolution = defaults.video_highresolution;
+                    _video_gamescreensize = defaults._video_gamescreensize;
+                    video_gammacorrection = defaults.video_gammacorrection;
+                    video_fpsscale = defaults.video_fpsscale;
+                    _audio_soundvolume = defaults._audio_soundvolume;
+                    _audio_musicvolume = defaults._audio_musicvolume;
+                    audio_randompitch = defaults.audio_randompitch;
+                    audio_musiceffect = defaults.audio_musiceffect;
+                    settingBuilder.SetValue("key_turnleft", key_turnleft);
+                    settingBuilder.SetValue("key_turnright", key_turnright);
+                    settingBuilder.SetValue("key_run", key_run);
+                    settingBuilder.SetValue("key_strafe", key_strafe);
+                    settingBuilder.SetValue("mouse_sensitivity", mouse_sensitivity);
+                    settingBuilder.SetValue("mouse_disableyaxis", mouse_disableyaxis);
+                    settingBuilder.SetValue(nameof(game_alwaysrun), game_alwaysrun);
+                    settingBuilder.SetValue(nameof(video_highresolution), video_highresolution);
+                    settingBuilder.SetValue(nameof(video_gamescreensize), video_gamescreensize);
+                    settingBuilder.SetValue(nameof(video_gammacorrection), video_gammacorrection);
+                    settingBuilder.SetValue(nameof(video_fpsscale), video_fpsscale);
+                    settingBuilder.SetValue(nameof(audio_soundvolume), audio_soundvolume);
+                    settingBuilder.SetValue(nameof(audio_musicvolume), audio_musicvolume);
+                    settingBuilder.SetValue(nameof(audio_randompitch), audio_randompitch);
+                    settingBuilder.SetValue(nameof(audio_musiceffect), audio_musiceffect);
+                    EventBusManager.Instance.Sync.Post(new VideoGameScreenSizeChangeEvent());
+                });
         }
 
         public static string getName(string raw)
